@@ -562,22 +562,29 @@ let state = {
   knockoutMatches: [],  // all knockout-stage matches for bracket
 };
 
-// Round order as ESPN reports them — used to rank how far a team has gone
-const ROUND_ORDER = {
-  "group stage": 1,
-  "round of 32": 2,
-  "round of 16": 3,
-  "quarterfinal": 4, "quarter-final": 4, "quarter final": 4,
-  "semifinal": 5,    "semi-final": 5,    "semi final": 5,
-  "third place":  6, "3rd place": 6,
-  "final": 7,
-};
+// Maps ESPN seasonSlug and text fragments → round number
+// Order matters: more-specific strings must come before shorter ones
+// (e.g. "semifinals" before "final" so "semifinals" isn't matched by "final")
+const ROUND_ORDER = [
+  [["group-stage", "group stage"],            1],
+  [["round-of-32", "round of 32"],            2],
+  [["round-of-16", "round of 16", "last 16"], 3],
+  [["quarterfinals","quarter-finals","quarter-final","quarter final","quarterfinal"], 4],
+  [["semifinals",  "semi-finals",  "semi-final",  "semi final",  "semifinal"],       5],
+  [["third-place", "third place",  "3rd place"],                                     6],
+  [["final"],                                                                         7],
+];
 
 function roundValue(roundText) {
-  for (const [key, val] of Object.entries(ROUND_ORDER)) {
-    if (roundText.includes(key)) return val;
+  for (const [keys, val] of ROUND_ORDER) {
+    if (keys.some(k => roundText.includes(k))) return val;
   }
-  return 1; // default to group stage
+  return 1;
+}
+
+// Use seasonSlug directly for precise final/3rd-place detection
+function getSlug(ev) {
+  return (ev.season?.slug || "").toLowerCase();
 }
 
 const ROUND_LABEL = ["", "Groups", "R32", "R16", "QF", "SF", "3rd", "Final"];
@@ -678,9 +685,13 @@ function processEvents(events, isToday) {
     const awayScore = away?.score ?? "-";
 
     const roundText = getRoundText(ev, comp);
-    const isFinal      = roundText.includes("final") && !roundText.includes("third") && !roundText.includes("3rd");
-    const isThirdPlace = roundText.includes("third") || roundText.includes("3rd place") || roundText.includes("third place");
-    const isKnockout   = roundText.match(/round of (32|16)|last 16|quarter.final|semi.final|final/i);
+    const slug = getSlug(ev);
+    // Use slug for precise detection — avoids "semifinal".includes("final") false positive
+    const isFinal      = slug === "final" || slug === "world-cup-final" ||
+                         (roundValue(roundText) === 7);
+    const isThirdPlace = slug === "third-place" || slug === "third-place-match" ||
+                         (roundValue(roundText) === 6);
+    const isKnockout   = roundValue(roundText) >= 2;
 
     // Record the furthest round each team has appeared in (win or lose)
     const rv = roundValue(roundText);
@@ -734,14 +745,13 @@ function processEvents(events, isToday) {
 }
 
 function processStandings(data) {
-  // ESPN can nest groups under different keys depending on tournament phase
-  const rawGroups =
-    data?.standings?.groups ||
-    data?.children?.map(c => c.standings)?.filter(Boolean) ||
-    data?.groups || [];
+  // ESPN structure: data.children[i] = one group
+  // Each group: { name: "Group A", standings: { entries: [...] } }
+  const rawGroups = data?.children || [];
+  if (!rawGroups.length) return;
 
-  state.groups = rawGroups.map((g, gi) => {
-    const entries = g?.standings?.entries || g?.entries || [];
+  state.groups = rawGroups.map(g => {
+    const entries = g?.standings?.entries || [];
     const teams = entries.map(e => {
       const teamName = canonicalTeam(e.team?.displayName || e.team?.name || "");
       const getStat = name => e.stats?.find(s => s.name === name)?.value ?? 0;
@@ -752,32 +762,25 @@ function processStandings(data) {
         w:   getStat("wins"),
         d:   getStat("ties"),
         l:   getStat("losses"),
-        gf:  getStat("pointsFor"),
+        gf:  getStat("pointsFor"),   // ESPN calls goals "pointsFor"
         ga:  getStat("pointsAgainst"),
         pts: getStat("points"),
       };
     }).sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga));
 
-    // Mark group positions: top 2 auto-qualify, 3rd = potential best-3rd, 4th = out
+    const gamesPlayed = teams.reduce((s, t) => s + t.p, 0);
     teams.forEach((t, i) => {
-      const gamesPlayed = teams.reduce((s, t) => s + t.p, 0);
       t.status = gamesPlayed === 0 ? "alive"
                : i < 2            ? "qualified"
                : i === 2          ? "best-third"
                :                    "out";
     });
 
-    return {
-      name: (() => {
-        const raw = (g.abbreviation || g.name || "").trim().toUpperCase();
-        // ESPN returns "OVERALL" pre-tournament — fall back to A, B, C…
-        if (!raw || raw === "OVERALL" || raw.length > 2) {
-          return String.fromCharCode(65 + gi); // A, B, C...
-        }
-        return raw;
-      })(),
-      teams,
-    };
+    // ESPN already returns "Group A", "Group B" etc — extract the letter
+    const fullName = g.name || g.abbreviation || "";
+    const letter = fullName.replace(/^group\s*/i, "").trim() || fullName;
+
+    return { name: letter, teams };
   });
 }
 
