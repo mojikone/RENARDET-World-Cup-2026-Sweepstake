@@ -81,7 +81,7 @@
     header h1 span { color: var(--gold); }
     header p {
       margin-top: .4rem;
-      color: var(--muted);
+      color: rgba(255,255,255,.7);
       font-size: .95rem;
     }
     .prize-banner {
@@ -95,16 +95,17 @@
       display: flex;
       align-items: center;
       gap: .5rem;
-      background: rgba(255,255,255,.06);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.25);
       border-radius: 999px;
       padding: .35rem 1rem;
       font-size: .85rem;
-      font-weight: 600;
+      font-weight: 700;
+      color: #fff;
     }
-    .prize-pill.gold   { border-color: var(--gold);   color: var(--gold); }
-    .prize-pill.silver { border-color: var(--silver); color: var(--silver); }
-    .prize-pill.bronze { border-color: #cd7f32;       color: #cd7f32; }
+    .prize-pill.gold   { border-color: #f59e0b; color: #fbbf24; }
+    .prize-pill.silver { border-color: rgba(255,255,255,.6); color: #fff; }
+    .prize-pill.bronze { border-color: #fb923c; color: #fdba74; }
 
     /* ── Layout ── */
     main {
