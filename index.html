@@ -589,20 +589,20 @@
 
   <!-- Podium (hidden until final is played) -->
   <section id="podium-section" style="display:none">
-    <div class="section-title collapsible" onclick="toggleSection(this)">🏆 Final Results<span class="section-chevron">▼</span></div>
+    <div class="section-title collapsible" onclick="toggleSection(this)"><span class="section-chevron"></span>Final Results</div>
     <div class="section-body"><div id="podium"></div></div>
   </section>
 
   <!-- Leaderboard (not collapsible) -->
   <section id="leaderboard-section">
-    <div class="section-title">📊 Leaderboard</div>
+    <div class="section-title">Leaderboard</div>
     <div class="leaderboard" id="leaderboard"></div>
   </section>
 
   <!-- Live / Recent Matches -->
   <section id="matches-section">
     <div class="section-header-row">
-      <div class="section-title collapsible" id="matches-title" onclick="toggleSection(this)">⚽ Today's Matches<span class="section-chevron">▼</span></div>
+      <div class="section-title collapsible" id="matches-title" onclick="toggleSection(this)"><span class="section-chevron"></span>Today's Matches</div>
       <span id="live-clock"></span>
     </div>
     <div class="section-body"><div id="matches-container"><div class="placeholder"><div class="emoji">⚽</div><p>Fetching match data…</p></div></div></div>
@@ -610,7 +610,7 @@
 
   <!-- Tournament: Groups + Bracket -->
   <section id="tournament-section">
-    <div class="section-title collapsible" id="tournament-title" onclick="toggleSection(this)">🗓 Tournament<span class="section-chevron">▼</span></div>
+    <div class="section-title collapsible" id="tournament-title" onclick="toggleSection(this)"><span class="section-chevron"></span>Tournament</div>
     <div class="section-body"><div id="tournament-container">
       <div class="placeholder"><div class="emoji">⏳</div><p>Loading tournament data…</p></div>
     </div></div>
@@ -618,7 +618,7 @@
 
   <!-- Full Schedule -->
   <section id="schedule-section">
-    <div class="section-title collapsible" onclick="toggleSection(this)">📅 Full Schedule<span class="section-chevron">▼</span></div>
+    <div class="section-title collapsible" onclick="toggleSection(this)"><span class="section-chevron"></span>Full Schedule</div>
     <div class="section-body"><div id="schedule-container"><div class="placeholder"><div class="emoji">⏳</div><p>Loading schedule…</p></div></div></div>
   </section>
 
@@ -1179,7 +1179,7 @@ function renderMatches() {
   const tournamentStart = new Date("2026-06-11T00:00:00");
   if (now < tournamentStart) {
     const days = Math.ceil((tournamentStart - now) / 86_400_000);
-    titleEl.innerHTML = "⚽ Today's Matches<span class='section-chevron'></span>";
+    titleEl.innerHTML = "<span class='section-chevron'></span>Today's Matches";
     container.innerHTML = `
       <div class="placeholder">
         <div class="emoji">⏳</div>
@@ -1195,7 +1195,7 @@ function renderMatches() {
   }
 
   const live = state.matches.filter(m => m.live);
-  titleEl.innerHTML = (live.length ? `⚽ Live Matches (${live.length})` : "⚽ Today's Matches") + "<span class='section-chevron'></span>";
+  titleEl.innerHTML = "<span class='section-chevron'></span>" + (live.length ? `Live Matches (${live.length})` : "Today's Matches");
 
   const html = state.matches.map(m => {
     const homeOwner = TEAM_TO_PERSON[m.homeTeam] || "";
@@ -1276,7 +1276,7 @@ function renderTournament() {
   const hasBracket = state.knockoutMatches.length > 0;
 
   if (!hasGroups && !hasBracket) {
-    titleEl.innerHTML = "🗓 Tournament<span class='section-chevron'></span>";
+    titleEl.innerHTML = "<span class='section-chevron'></span>Tournament";
     container.innerHTML = `
       <div class="placeholder">
         <div class="emoji">⏳</div>
@@ -1289,7 +1289,7 @@ function renderTournament() {
 
   // ── Groups ──
   if (hasGroups) {
-    titleEl.innerHTML = "🗓 Group Stage<span class='section-chevron'></span>";
+    titleEl.innerHTML = "<span class='section-chevron'></span>Group Stage";
     html += `<div class="groups-grid">` + state.groups.map(g => {
       const rows = g.teams.map(t => {
         const dotClass = t.status === "qualified" ? "qualified" : t.status === "best-third" ? "best-third" : t.status === "out" ? "out" : "alive";
@@ -1307,7 +1307,7 @@ function renderTournament() {
   // ── Bracket ──
   if (hasBracket) {
     if (hasGroups) html += `<div style="margin-top:2rem"><div class="section-title" style="margin-bottom:1rem">🏟 Knockout Stage</div></div>`;
-    else titleEl.innerHTML = "🏟 Knockout Stage<span class='section-chevron'></span>";
+    else titleEl.innerHTML = "<span class='section-chevron'></span>Knockout Stage";
 
     // Group matches by round value, in order
     const roundMap = {};
