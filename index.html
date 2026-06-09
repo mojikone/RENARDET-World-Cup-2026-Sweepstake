@@ -590,7 +590,7 @@ function getSlug(ev) {
 const ROUND_LABEL = ["", "Groups", "R32", "R16", "QF", "SF", "3rd", "Final"];
 function teamRoundLabel(team) {
   const rv = state.teamRound[team] || 0;
-  return rv > 0 ? ROUND_LABEL[rv] || "" : "";
+  return rv >= 2 ? ROUND_LABEL[rv] || "" : ""; // only show from R32 onwards
 }
 
 // ── ESPN API helpers ─────────────────────────────────────────────
