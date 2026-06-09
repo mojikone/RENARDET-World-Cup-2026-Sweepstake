@@ -355,45 +355,44 @@
     .sched-result { font-size: .8rem; font-weight: 700; color: var(--green); white-space: nowrap; }
 
     /* ── Groups grid ── */
+    /* ── Compact Groups ── */
     .groups-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: .75rem;
     }
     .group-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       overflow: hidden;
     }
     .group-card h4 {
       background: var(--card2);
-      padding: .5rem 1rem;
-      font-size: .8rem;
+      padding: .4rem .8rem;
+      font-size: .75rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--muted);
       border-bottom: 1px solid var(--border);
     }
-    .group-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
-    .group-table th {
-      padding: .3rem .6rem;
-      color: var(--muted);
-      font-weight: 600;
-      text-align: center;
+    .group-team-row {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .4rem .8rem;
       border-bottom: 1px solid var(--border);
+      font-size: .82rem;
     }
-    .group-table th.left { text-align: left; }
-    .group-table td { padding: .4rem .6rem; text-align: center; border-bottom: 1px solid rgba(30,45,69,.5); }
-    .group-table td.left { text-align: left; }
-    .group-table tr:last-child td { border-bottom: none; }
-    .group-table tr.qualified td:first-child { border-left: 3px solid var(--green); }
-    .group-table tr.best-third td:first-child { border-left: 3px solid var(--gold); }
-    .group-table tr.out td { opacity: .45; }
-    .group-table tr.out .team-name-cell { text-decoration: line-through; }
-    .team-cell { display: flex; flex-direction: column; gap: .1rem; }
-    .team-name-cell { font-weight: 600; }
+    .group-team-row:last-child { border-bottom: none; }
+    .group-team-row.out { opacity: .4; }
+    .group-team-row.out .g-team { text-decoration: line-through; }
+    .g-status { width: .55rem; height: .55rem; border-radius: 50%; flex-shrink: 0; }
+    .g-status.qualified { background: var(--green); }
+    .g-status.best-third { background: var(--gold); }
+    .g-status.alive { background: var(--muted); }
+    .g-status.out { background: transparent; border: 1px solid var(--border); }
+    .g-team { font-weight: 600; flex: 1; }
+    .g-owner { font-size: .68rem; color: var(--blue); }
     .team-owner-badge {
       display: inline-block;
       font-size: .65rem;
@@ -1282,34 +1281,15 @@ function renderTournament() {
     titleEl.textContent = "🗓 Group Stage";
     html += `<div class="groups-grid">` + state.groups.map(g => {
       const rows = g.teams.map(t => {
-        const s = teamStatus(t.name);
-        const rowClass = t.status === "qualified" ? "qualified" : t.status === "best-third" ? "best-third" : t.status === "out" ? "out" : "";
-        const statusIcon = s === "winner" ? " 🏆" : s === "second" ? " 🥈" : s === "third" ? " 🥉" : "";
-        return `
-          <tr class="${rowClass}">
-            <td class="left">
-              <div class="team-cell">
-                <span class="team-name-cell">${t.name}${statusIcon}</span>
-                ${t.owner ? ownerBadge(t.owner) : ""}
-              </div>
-            </td>
-            <td>${t.p}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td>
-            <td>${t.gf}:${t.ga}</td>
-            <td><strong>${t.pts}</strong></td>
-          </tr>`;
-      }).join("");
-      return `
-        <div class="group-card">
-          <h4>Group ${g.name}</h4>
-          <table class="group-table">
-            <thead><tr>
-              <th class="left">Team</th>
-              <th title="Played">P</th><th title="Won">W</th><th title="Drawn">D</th><th title="Lost">L</th>
-              <th title="Goals">GF:GA</th><th title="Points">Pts</th>
-            </tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
+        const dotClass = t.status === "qualified" ? "qualified" : t.status === "best-third" ? "best-third" : t.status === "out" ? "out" : "alive";
+        const rowClass = t.status === "out" ? "out" : "";
+        return `<div class="group-team-row ${rowClass}">
+          <span class="g-status ${dotClass}"></span>
+          <span class="g-team">${t.name}</span>
+          ${t.owner ? `<span class="g-owner">${t.owner}</span>` : ""}
         </div>`;
+      }).join("");
+      return `<div class="group-card"><h4>Group ${g.name}</h4>${rows}</div>`;
     }).join("") + `</div>`;
   }
 
