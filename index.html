@@ -222,7 +222,11 @@
       text-transform: uppercase;
       letter-spacing: .5px;
       margin-bottom: .6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+    .match-kickoff { font-weight: 600; color: var(--text); font-size: .75rem; }
     .match-meta .live-badge {
       background: var(--green);
       color: #000;
@@ -969,7 +973,10 @@ function renderMatches() {
 
     return `
       <div class="match-card ${liveClass}">
-        <div class="match-meta">${badge}${label || m.statusDetail || ""}</div>
+        <div class="match-meta">
+          <span>${badge}${label || m.statusDetail || ""}</span>
+          ${kickoffTime ? `<span class="match-kickoff">${kickoffTime}</span>` : ""}
+        </div>
         <div class="match-teams">
           <div class="match-team home">
             <div class="team-name">${m.homeTeam}</div>
@@ -977,7 +984,7 @@ function renderMatches() {
           </div>
           <div class="score-box">
             <div class="score">${m.homeScore}–${m.awayScore}</div>
-            <div class="time">${m.completed ? "FT" : m.live ? "●" : kickoffTime}</div>
+            <div class="time">${m.completed ? "FT" : m.live ? "●" : ""}</div>
           </div>
           <div class="match-team away">
             <div class="team-name">${m.awayTeam}</div>
