@@ -133,7 +133,9 @@
       flex: 1;
       height: 1px;
       background: var(--border);
+      order: 99;
     }
+    .section-chevron { order: 98; }
     .section-header-row {
       display: flex;
       align-items: center;
@@ -549,6 +551,14 @@
     .theme-toggle:hover { background: rgba(255,255,255,.2); }
     [data-theme="light"] .theme-toggle { background: rgba(0,0,0,.1); border-color: rgba(0,0,0,.15); color: #fff; }
 
+    /* ── Collapsible sections ── */
+    .section-title.collapsible { cursor: pointer; user-select: none; }
+    .section-title.collapsible:hover { color: var(--text); }
+    .section-chevron { font-size: .7rem; margin-left: .2rem; transition: transform .2s; flex-shrink: 0; }
+    .section-collapsed .section-chevron { transform: rotate(-90deg); }
+    .section-body { overflow: hidden; }
+    .section-collapsed .section-body { display: none; }
+
     /* ── Responsive ── */
     @media (max-width: 600px) {
       .lb-teams { display: none; }
@@ -578,11 +588,11 @@
 
   <!-- Podium (hidden until final is played) -->
   <section id="podium-section" style="display:none">
-    <div class="section-title">🏆 Final Results</div>
-    <div id="podium"></div>
+    <div class="section-title collapsible" onclick="toggleSection(this)">🏆 Final Results<span class="section-chevron">▼</span></div>
+    <div class="section-body"><div id="podium"></div></div>
   </section>
 
-  <!-- Leaderboard -->
+  <!-- Leaderboard (not collapsible) -->
   <section id="leaderboard-section">
     <div class="section-title">📊 Leaderboard</div>
     <div class="leaderboard" id="leaderboard"></div>
@@ -591,24 +601,24 @@
   <!-- Live / Recent Matches -->
   <section id="matches-section">
     <div class="section-header-row">
-      <div class="section-title" id="matches-title">⚽ Today's Matches</div>
+      <div class="section-title collapsible" id="matches-title" onclick="toggleSection(this)">⚽ Today's Matches<span class="section-chevron">▼</span></div>
       <span id="live-clock"></span>
     </div>
-    <div id="matches-container"><div class="placeholder"><div class="emoji">⚽</div><p>Fetching match data…</p></div></div>
+    <div class="section-body"><div id="matches-container"><div class="placeholder"><div class="emoji">⚽</div><p>Fetching match data…</p></div></div></div>
   </section>
 
   <!-- Tournament: Groups + Bracket -->
   <section id="tournament-section">
-    <div class="section-title" id="tournament-title">🗓 Tournament</div>
-    <div id="tournament-container">
+    <div class="section-title collapsible" id="tournament-title" onclick="toggleSection(this)">🗓 Tournament<span class="section-chevron">▼</span></div>
+    <div class="section-body"><div id="tournament-container">
       <div class="placeholder"><div class="emoji">⏳</div><p>Loading tournament data…</p></div>
-    </div>
+    </div></div>
   </section>
 
   <!-- Full Schedule -->
   <section id="schedule-section">
-    <div class="section-title">📅 Full Schedule</div>
-    <div id="schedule-container"><div class="placeholder"><div class="emoji">⏳</div><p>Loading schedule…</p></div></div>
+    <div class="section-title collapsible" onclick="toggleSection(this)">📅 Full Schedule<span class="section-chevron">▼</span></div>
+    <div class="section-body"><div id="schedule-container"><div class="placeholder"><div class="emoji">⏳</div><p>Loading schedule…</p></div></div></div>
   </section>
 
   <!-- Schedule Modal -->
@@ -1352,6 +1362,10 @@ function renderAll() {
 }
 
 // ── Theme ────────────────────────────────────────────────────────
+function toggleSection(titleEl) {
+  titleEl.closest("section").classList.toggle("section-collapsed");
+}
+
 function toggleTheme() {
   const isLight = document.documentElement.getAttribute("data-theme") === "light";
   setTheme(isLight ? "dark" : "light");
