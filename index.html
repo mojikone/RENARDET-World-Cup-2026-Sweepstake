@@ -962,6 +962,11 @@ function renderMatches() {
     if (m.isFinal)       label = "🏆 FINAL";
     else if (m.isThirdPlace) label = "🥉 Third Place";
 
+    let kickoffTime = "";
+    if (!m.live && !m.completed && m.date) {
+      kickoffTime = new Date(m.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
     return `
       <div class="match-card ${liveClass}">
         <div class="match-meta">${badge}${label || m.statusDetail || ""}</div>
@@ -972,7 +977,7 @@ function renderMatches() {
           </div>
           <div class="score-box">
             <div class="score">${m.homeScore}–${m.awayScore}</div>
-            <div class="time">${m.completed ? "FT" : m.live ? "●" : ""}</div>
+            <div class="time">${m.completed ? "FT" : m.live ? "●" : kickoffTime}</div>
           </div>
           <div class="match-team away">
             <div class="team-name">${m.awayTeam}</div>
