@@ -1203,8 +1203,17 @@ function setTheme(theme) {
 
 // ── Boot ─────────────────────────────────────────────────────────
 renderAll();
-window._refreshInterval = setInterval(loadLiveData, 60_000);
-loadLiveData();
+
+function scheduleRefresh() {
+  clearInterval(window._refreshInterval);
+  const hasLive = state.matches.some(m => m.live);
+  window._refreshInterval = setInterval(async () => {
+    await loadLiveData();
+    scheduleRefresh();
+  }, hasLive ? 15_000 : 60_000);
+}
+
+loadLiveData().then(scheduleRefresh);
 
 (function tickClock() {
   const el = document.getElementById("live-clock");
