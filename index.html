@@ -279,6 +279,26 @@
     }
     .score-box .score { font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; }
     .score-box .time  { font-size: .65rem; color: var(--muted); }
+    .match-progress { margin-top: .75rem; }
+    .match-progress-track {
+      height: 5px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .match-progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--blue);
+      transition: width .5s ease;
+    }
+    .match-card.live .match-progress-fill { background: var(--green); }
+    .match-progress-label {
+      font-size: .65rem;
+      color: var(--muted);
+      margin-top: .25rem;
+      text-align: center;
+    }
 
     /* ── Groups grid ── */
     .groups-grid {
@@ -794,6 +814,8 @@ function processEvents(events, isToday) {
       live: status?.state === "in",
       completed: status?.completed,
       statusDetail: status?.shortDetail || "",
+      displayClock: comp?.status?.displayClock || "",
+      period: comp?.status?.period || 0,
       roundText, roundValue: rv,
       isFinal, isThirdPlace,
     };
@@ -992,6 +1014,24 @@ function renderMatches() {
       kickoffTime = new Date(m.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
 
+    // Progress: parse "MM:SS" clock counting up; period 1 = first 45, period 2 = second 45
+    let progressPct = 0, progressLabel = "";
+    if (m.completed) {
+      progressPct = 100; progressLabel = "Full Time";
+    } else if (m.live) {
+      const mins = m.displayClock ? parseInt(m.displayClock.split(":")[0]) || 0 : 0;
+      progressPct = Math.min(100, Math.round((mins / 90) * 100));
+      progressLabel = m.displayClock ? `${mins}'` : "Live";
+    }
+
+    const progressBar = (m.live || m.completed) ? `
+      <div class="match-progress">
+        <div class="match-progress-track">
+          <div class="match-progress-fill" style="width:${progressPct}%"></div>
+        </div>
+        <div class="match-progress-label">${progressLabel}</div>
+      </div>` : "";
+
     return `
       <div class="match-card ${liveClass}">
         <div class="match-meta">
@@ -1012,6 +1052,7 @@ function renderMatches() {
             <div class="team-owner ${awayOwner ? 'has-owner' : ''}">${awayOwner || "—"}</div>
           </div>
         </div>
+        ${progressBar}
       </div>`;
   }).join("");
 
