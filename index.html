@@ -300,33 +300,59 @@
       text-align: center;
     }
 
-    /* ── Full Schedule ── */
-    .sched-day { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: .5rem; }
-    .sched-day-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: .6rem 1rem; background: var(--card2);
-      cursor: pointer; user-select: none; gap: 1rem;
+    /* ── Full Schedule Calendar ── */
+    .cal-months { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 700px) { .cal-months { grid-template-columns: 1fr; } }
+    .cal-month { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .cal-month-title { text-align: center; font-weight: 700; font-size: .95rem; padding: .6rem; background: var(--card2); border-bottom: 1px solid var(--border); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .cal-dow { text-align: center; font-size: .65rem; font-weight: 700; color: var(--muted); padding: .4rem 0; text-transform: uppercase; }
+    .cal-cell {
+      aspect-ratio: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 600; cursor: default;
+      border-radius: 6px; margin: 2px; position: relative;
     }
-    .sched-day-header:hover { background: var(--border); }
-    .sched-day-label { font-weight: 700; font-size: .9rem; }
-    .sched-day-meta { font-size: .75rem; color: var(--muted); }
-    .sched-day-chevron { font-size: .75rem; color: var(--muted); transition: transform .2s; }
-    .sched-day.open .sched-day-chevron { transform: rotate(180deg); }
-    .sched-day-body { display: none; }
-    .sched-day.open .sched-day-body { display: block; }
+    .cal-cell.has-matches {
+      background: var(--blue); color: #fff; cursor: pointer;
+      transition: transform .1s, opacity .1s;
+    }
+    .cal-cell.has-matches:hover { transform: scale(1.12); opacity: .9; }
+    .cal-cell.today { outline: 2px solid var(--gold); outline-offset: -2px; }
+    .cal-cell.has-matches.today { background: var(--gold); color: #000; }
+    .cal-dot { font-size: .55rem; margin-top: 1px; opacity: .8; }
+
+    /* Modal */
+    .sched-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .sched-modal-overlay.open { display: flex; }
+    .sched-modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.2rem; width: min(420px, 92vw);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .sched-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .8rem;
+    }
+    .sched-modal-title { font-weight: 700; font-size: 1rem; }
+    .sched-modal-close { cursor: pointer; font-size: 1.3rem; color: var(--muted); line-height: 1; }
+    .sched-modal-close:hover { color: var(--text); }
     .sched-row {
       display: flex; align-items: center; gap: .6rem;
-      padding: .45rem 1rem; font-size: .85rem;
+      padding: .45rem 0; font-size: .85rem;
       border-top: 1px solid var(--border);
     }
-    .sched-time { color: var(--muted); font-size: .75rem; width: 4.5rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-    .sched-teams { flex: 1; }
+    .sched-time { color: var(--muted); font-size: .72rem; width: 4rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .sched-teams { flex: 1; line-height: 1.4; }
     .sched-home { font-weight: 600; }
-    .sched-vs { color: var(--muted); margin: 0 .3rem; font-size: .7rem; }
+    .sched-vs { color: var(--muted); margin: 0 .25rem; font-size: .68rem; }
     .sched-away { font-weight: 600; }
-    .sched-owner { font-size: .7rem; color: var(--blue); margin-left: .3rem; }
-    .sched-result { font-size: .8rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
-    .sched-result.done { color: var(--text); }
+    .sched-owner { font-size: .68rem; color: var(--blue); }
+    .sched-result { font-size: .8rem; font-weight: 700; color: var(--green); white-space: nowrap; }
 
     /* ── Groups grid ── */
     .groups-grid {
@@ -585,6 +611,17 @@
     <div class="section-title">📅 Full Schedule</div>
     <div id="schedule-container"><div class="placeholder"><div class="emoji">⏳</div><p>Loading schedule…</p></div></div>
   </section>
+
+  <!-- Schedule Modal -->
+  <div class="sched-modal-overlay" id="sched-modal-overlay" onclick="if(event.target===this)closeDayModal()">
+    <div class="sched-modal">
+      <div class="sched-modal-header">
+        <span class="sched-modal-title" id="sched-modal-title"></span>
+        <span class="sched-modal-close" onclick="closeDayModal()">✕</span>
+      </div>
+      <div id="sched-modal-body"></div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -762,6 +799,83 @@ async function loadLiveData() {
   renderAll();
 }
 
+// Keyed by "YYYY-MM-DD" → array of match objects
+const _schedByDay = {};
+
+function openDayModal(dateKey) {
+  const matches = _schedByDay[dateKey];
+  if (!matches) return;
+  const d = new Date(dateKey + "T00:00:00");
+  document.getElementById("sched-modal-title").textContent =
+    d.toLocaleDateString([], { weekday:"long", month:"long", day:"numeric" });
+  document.getElementById("sched-modal-body").innerHTML = matches.map(m => {
+    const ho = TEAM_TO_PERSON[m.home] ? `<span class="sched-owner">${TEAM_TO_PERSON[m.home]}</span>` : "";
+    const ao = TEAM_TO_PERSON[m.away] ? `<span class="sched-owner">${TEAM_TO_PERSON[m.away]}</span>` : "";
+    return `<div class="sched-row">
+      <span class="sched-time">${m.completed ? "FT" : m.time}</span>
+      <span class="sched-teams">
+        <span class="sched-home">${m.home}</span> ${ho}
+        <span class="sched-vs">vs</span>
+        <span class="sched-away">${m.away}</span> ${ao}
+      </span>
+      ${m.completed ? `<span class="sched-result">${m.homeScore}–${m.awayScore}</span>` : ""}
+    </div>`;
+  }).join("");
+  document.getElementById("sched-modal-overlay").classList.add("open");
+}
+
+function closeDayModal() {
+  document.getElementById("sched-modal-overlay").classList.remove("open");
+}
+
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDayModal(); });
+
+function renderCalendar() {
+  const container = document.getElementById("schedule-container");
+  const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10);
+
+  const months = [
+    { year: 2026, month: 5 }, // June (0-indexed)
+    { year: 2026, month: 6 }, // July
+  ];
+
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const dows = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  let html = `<div class="cal-months">`;
+
+  for (const { year, month } of months) {
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    html += `<div class="cal-month">
+      <div class="cal-month-title">${monthNames[month]} ${year}</div>
+      <div class="cal-grid">
+        ${dows.map(d => `<div class="cal-dow">${d}</div>`).join("")}
+        ${Array(firstDay).fill(`<div class="cal-cell"></div>`).join("")}
+        ${Array.from({length: daysInMonth}, (_, i) => {
+          const day = i + 1;
+          const key = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+          const hasMatches = !!_schedByDay[key];
+          const isToday = key === todayKey;
+          const cls = [
+            "cal-cell",
+            hasMatches ? "has-matches" : "",
+            isToday ? "today" : ""
+          ].filter(Boolean).join(" ");
+          const onclick = hasMatches ? `onclick="openDayModal('${key}')"` : "";
+          const dot = hasMatches ? `<span class="cal-dot">${_schedByDay[key].length}⚽</span>` : "";
+          return `<div class="${cls}" ${onclick}>${day}${dot}</div>`;
+        }).join("")}
+      </div>
+    </div>`;
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
 async function loadSchedule() {
   const container = document.getElementById("schedule-container");
   try {
@@ -769,19 +883,17 @@ async function loadSchedule() {
     const events = data.events || [];
     if (!events.length) { container.innerHTML = `<div class="placeholder"><p>No schedule data available yet.</p></div>`; return; }
 
-    // Group by local date string
-    const byDate = {};
     for (const ev of events) {
       const comp = ev.competitions?.[0];
       const dateStr = comp?.date || ev.date;
       if (!dateStr) continue;
       const d = new Date(dateStr);
-      const key = d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
-      if (!byDate[key]) byDate[key] = { date: d, matches: [] };
+      const key = d.toISOString().slice(0, 10);
+      if (!_schedByDay[key]) _schedByDay[key] = [];
       const home = comp?.competitors?.find(c => c.homeAway === "home") || comp?.competitors?.[0];
       const away = comp?.competitors?.find(c => c.homeAway === "away") || comp?.competitors?.[1];
       const status = comp?.status?.type;
-      byDate[key].matches.push({
+      _schedByDay[key].push({
         time: d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }),
         home: canonicalTeam(home?.team?.displayName || ""),
         away: canonicalTeam(away?.team?.displayName || ""),
@@ -790,42 +902,7 @@ async function loadSchedule() {
         completed: status?.completed || false,
       });
     }
-
-    // Sort dates chronologically
-    const sorted = Object.entries(byDate).sort((a,b) => a[1].date - b[1].date);
-    const today = new Date().toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
-    const todayIdx = sorted.findIndex(([k]) => k === today);
-
-    let html = "";
-    sorted.forEach(([label, { matches }], i) => {
-      const isToday = label === today;
-      const open = isToday || (todayIdx === -1 && i === 0);
-      html += `<div class="sched-day${open ? " open" : ""}" onclick="this.classList.toggle('open')">
-        <div class="sched-day-header">
-          <span class="sched-day-label">${isToday ? "📍 " : ""}${label}</span>
-          <span class="sched-day-meta">${matches.length} match${matches.length !== 1 ? "es" : ""}</span>
-          <span class="sched-day-chevron">▼</span>
-        </div>
-        <div class="sched-day-body">
-          ${matches.map(m => {
-            const ho = TEAM_TO_PERSON[m.home] ? `<span class="sched-owner">(${TEAM_TO_PERSON[m.home]})</span>` : "";
-            const ao = TEAM_TO_PERSON[m.away] ? `<span class="sched-owner">(${TEAM_TO_PERSON[m.away]})</span>` : "";
-            const result = m.completed ? `<span class="sched-result done">${m.homeScore}–${m.awayScore}</span>`
-                         : `<span class="sched-result">${m.time}</span>`;
-            return `<div class="sched-row">
-              <span class="sched-time">${m.completed ? "FT" : m.time}</span>
-              <span class="sched-teams">
-                <span class="sched-home">${m.home}</span>${ho}
-                <span class="sched-vs">vs</span>
-                <span class="sched-away">${m.away}</span>${ao}
-              </span>
-              ${m.completed ? `<span class="sched-result done">${m.homeScore}–${m.awayScore}</span>` : ""}
-            </div>`;
-          }).join("")}
-        </div>
-      </div>`;
-    });
-    container.innerHTML = html;
+    renderCalendar();
   } catch(e) {
     container.innerHTML = `<div class="placeholder"><p>Could not load schedule.</p></div>`;
     console.error("Schedule fetch error:", e);
