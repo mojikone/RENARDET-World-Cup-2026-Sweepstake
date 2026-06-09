@@ -547,9 +547,8 @@
     /* ── Collapsible sections ── */
     .section-title.collapsible { cursor: pointer; user-select: none; }
     .section-title.collapsible:hover { color: var(--text); }
-    .section-chevron { font-size: 1.1rem; margin-left: .2rem; flex-shrink: 0; line-height: 1; }
-    .section-chevron::before { content: '−'; }
-    .section-collapsed .section-chevron::before { content: '+'; }
+    .section-chevron { display: inline-block; width: .45rem; height: .45rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform .2s; margin-left: .35rem; flex-shrink: 0; vertical-align: middle; position: relative; top: -.05em; }
+    .section-collapsed .section-chevron { transform: rotate(-45deg); top: .1em; }
     .section-body { overflow: hidden; }
     .section-collapsed .section-body { display: none; }
 
@@ -1233,7 +1232,7 @@ function renderMatches() {
         <div class="match-teams">
           <div class="match-team home">
             <div class="team-name">${m.homeTeam}</div>
-            <div class="team-owner ${homeOwner ? 'has-owner' : ''}">${homeOwner || "—"}</div>
+            <div class="team-owner ${homeOwner ? 'has-owner' : ''}">${homeOwner || ""}</div>
           </div>
           <div class="score-box">
             <div class="score">${m.homeScore}–${m.awayScore}</div>
@@ -1241,7 +1240,7 @@ function renderMatches() {
           </div>
           <div class="match-team away">
             <div class="team-name">${m.awayTeam}</div>
-            <div class="team-owner ${awayOwner ? 'has-owner' : ''}">${awayOwner || "—"}</div>
+            <div class="team-owner ${awayOwner ? 'has-owner' : ''}">${awayOwner || ""}</div>
           </div>
         </div>
         ${progressBar}
