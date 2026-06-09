@@ -300,6 +300,34 @@
       text-align: center;
     }
 
+    /* ── Full Schedule ── */
+    .sched-day { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: .5rem; }
+    .sched-day-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .6rem 1rem; background: var(--card2);
+      cursor: pointer; user-select: none; gap: 1rem;
+    }
+    .sched-day-header:hover { background: var(--border); }
+    .sched-day-label { font-weight: 700; font-size: .9rem; }
+    .sched-day-meta { font-size: .75rem; color: var(--muted); }
+    .sched-day-chevron { font-size: .75rem; color: var(--muted); transition: transform .2s; }
+    .sched-day.open .sched-day-chevron { transform: rotate(180deg); }
+    .sched-day-body { display: none; }
+    .sched-day.open .sched-day-body { display: block; }
+    .sched-row {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .45rem 1rem; font-size: .85rem;
+      border-top: 1px solid var(--border);
+    }
+    .sched-time { color: var(--muted); font-size: .75rem; width: 4.5rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .sched-teams { flex: 1; }
+    .sched-home { font-weight: 600; }
+    .sched-vs { color: var(--muted); margin: 0 .3rem; font-size: .7rem; }
+    .sched-away { font-weight: 600; }
+    .sched-owner { font-size: .7rem; color: var(--blue); margin-left: .3rem; }
+    .sched-result { font-size: .8rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+    .sched-result.done { color: var(--text); }
+
     /* ── Groups grid ── */
     .groups-grid {
       display: grid;
@@ -551,6 +579,12 @@
       <div class="placeholder"><div class="emoji">⏳</div><p>Loading tournament data…</p></div>
     </div>
   </section>
+
+  <!-- Full Schedule -->
+  <section id="schedule-section">
+    <div class="section-title">📅 Full Schedule</div>
+    <div id="schedule-container"><div class="placeholder"><div class="emoji">⏳</div><p>Loading schedule…</p></div></div>
+  </section>
 </main>
 
 <script>
@@ -726,6 +760,76 @@ async function loadLiveData() {
     console.error("ESPN fetch error:", err);
   }
   renderAll();
+}
+
+async function loadSchedule() {
+  const container = document.getElementById("schedule-container");
+  try {
+    const data = await fetchJSON(`${ESPN_BASE}/scoreboard?limit=300&dates=20260611-20260719`);
+    const events = data.events || [];
+    if (!events.length) { container.innerHTML = `<div class="placeholder"><p>No schedule data available yet.</p></div>`; return; }
+
+    // Group by local date string
+    const byDate = {};
+    for (const ev of events) {
+      const comp = ev.competitions?.[0];
+      const dateStr = comp?.date || ev.date;
+      if (!dateStr) continue;
+      const d = new Date(dateStr);
+      const key = d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
+      if (!byDate[key]) byDate[key] = { date: d, matches: [] };
+      const home = comp?.competitors?.find(c => c.homeAway === "home") || comp?.competitors?.[0];
+      const away = comp?.competitors?.find(c => c.homeAway === "away") || comp?.competitors?.[1];
+      const status = comp?.status?.type;
+      byDate[key].matches.push({
+        time: d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }),
+        home: canonicalTeam(home?.team?.displayName || ""),
+        away: canonicalTeam(away?.team?.displayName || ""),
+        homeScore: home?.score ?? "",
+        awayScore: away?.score ?? "",
+        completed: status?.completed || false,
+      });
+    }
+
+    // Sort dates chronologically
+    const sorted = Object.entries(byDate).sort((a,b) => a[1].date - b[1].date);
+    const today = new Date().toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
+    const todayIdx = sorted.findIndex(([k]) => k === today);
+
+    let html = "";
+    sorted.forEach(([label, { matches }], i) => {
+      const isToday = label === today;
+      const open = isToday || (todayIdx === -1 && i === 0);
+      html += `<div class="sched-day${open ? " open" : ""}" onclick="this.classList.toggle('open')">
+        <div class="sched-day-header">
+          <span class="sched-day-label">${isToday ? "📍 " : ""}${label}</span>
+          <span class="sched-day-meta">${matches.length} match${matches.length !== 1 ? "es" : ""}</span>
+          <span class="sched-day-chevron">▼</span>
+        </div>
+        <div class="sched-day-body">
+          ${matches.map(m => {
+            const ho = TEAM_TO_PERSON[m.home] ? `<span class="sched-owner">(${TEAM_TO_PERSON[m.home]})</span>` : "";
+            const ao = TEAM_TO_PERSON[m.away] ? `<span class="sched-owner">(${TEAM_TO_PERSON[m.away]})</span>` : "";
+            const result = m.completed ? `<span class="sched-result done">${m.homeScore}–${m.awayScore}</span>`
+                         : `<span class="sched-result">${m.time}</span>`;
+            return `<div class="sched-row">
+              <span class="sched-time">${m.completed ? "FT" : m.time}</span>
+              <span class="sched-teams">
+                <span class="sched-home">${m.home}</span>${ho}
+                <span class="sched-vs">vs</span>
+                <span class="sched-away">${m.away}</span>${ao}
+              </span>
+              ${m.completed ? `<span class="sched-result done">${m.homeScore}–${m.awayScore}</span>` : ""}
+            </div>`;
+          }).join("")}
+        </div>
+      </div>`;
+    });
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = `<div class="placeholder"><p>Could not load schedule.</p></div>`;
+    console.error("Schedule fetch error:", e);
+  }
 }
 
 function detectGroupStageEliminations() {
@@ -1219,6 +1323,7 @@ function scheduleRefresh() {
 }
 
 loadLiveData().then(scheduleRefresh);
+loadSchedule();
 
 (function tickClock() {
   const el = document.getElementById("live-clock");
