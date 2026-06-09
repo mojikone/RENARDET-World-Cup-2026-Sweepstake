@@ -760,7 +760,11 @@ function processStandings(data) {
 
     // Mark group positions: top 2 auto-qualify, 3rd = potential best-3rd, 4th = out
     teams.forEach((t, i) => {
-      t.status = i < 2 ? "qualified" : i === 2 ? "best-third" : "out";
+      const gamesPlayed = teams.reduce((s, t) => s + t.p, 0);
+      t.status = gamesPlayed === 0 ? "alive"
+               : i < 2            ? "qualified"
+               : i === 2          ? "best-third"
+               :                    "out";
     });
 
     return {
