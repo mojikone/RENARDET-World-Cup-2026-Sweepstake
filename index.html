@@ -978,7 +978,7 @@ function renderTournament() {
     html += `<div class="groups-grid">` + state.groups.map(g => {
       const rows = g.teams.map(t => {
         const s = teamStatus(t.name);
-        const rowClass = t.status === "qualified" ? "qualified" : t.status === "best-third" ? "best-third" : "out";
+        const rowClass = t.status === "qualified" ? "qualified" : t.status === "best-third" ? "best-third" : t.status === "out" ? "out" : "";
         const statusIcon = s === "winner" ? " 🏆" : s === "second" ? " 🥈" : s === "third" ? " 🥉" : "";
         return `
           <tr class="${rowClass}">
