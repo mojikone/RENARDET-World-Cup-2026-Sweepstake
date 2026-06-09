@@ -562,15 +562,21 @@
 
     /* ── Responsive ── */
     @media (max-width: 600px) {
-      .lb-teams { display: none; }
-      .lb-row { padding: .7rem 1rem; }
+      .theme-toggle {
+        position: static;
+        margin: .6rem auto 0;
+        display: inline-flex;
+      }
+      header { padding-top: 1.5rem; }
+      .lb-teams { display: flex; flex-wrap: wrap; }
+      .lb-row { padding: .7rem 1rem; flex-wrap: wrap; row-gap: .4rem; }
+      .lb-name { min-width: 100%; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
   <h1>Renardet <span>World Cup 2026</span> Sweepstake</h1>
   <p>FIFA World Cup · USA, Canada & Mexico · June 11 – July 19, 2026</p>
   <div class="prize-banner">
@@ -578,6 +584,7 @@
     <div class="prize-pill silver">🥈 Runner-up — 30 OMR</div>
     <div class="prize-pill bronze">🥉 3rd Place — 15 OMR</div>
   </div>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
 </header>
 
 <main>
@@ -600,7 +607,7 @@
   </section>
 
   <!-- Live / Recent Matches -->
-  <section id="matches-section">
+  <section id="matches-section" class="section-collapsed">
     <div class="section-header-row">
       <div class="section-title collapsible" id="matches-title" onclick="toggleSection(this)"><span class="section-chevron"></span>Today's Matches</div>
       <span id="live-clock"></span>
@@ -609,7 +616,7 @@
   </section>
 
   <!-- Tournament: Groups + Bracket -->
-  <section id="tournament-section">
+  <section id="tournament-section" class="section-collapsed">
     <div class="section-title collapsible" id="tournament-title" onclick="toggleSection(this)"><span class="section-chevron"></span>Tournament</div>
     <div class="section-body"><div id="tournament-container">
       <div class="placeholder"><div class="emoji">⏳</div><p>Loading tournament data…</p></div>
@@ -617,7 +624,7 @@
   </section>
 
   <!-- Full Schedule -->
-  <section id="schedule-section">
+  <section id="schedule-section" class="section-collapsed">
     <div class="section-title collapsible" onclick="toggleSection(this)"><span class="section-chevron"></span>Full Schedule</div>
     <div class="section-body"><div id="schedule-container"><div class="placeholder"><div class="emoji">⏳</div><p>Loading schedule…</p></div></div></div>
   </section>
