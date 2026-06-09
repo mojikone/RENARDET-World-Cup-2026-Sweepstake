@@ -878,6 +878,8 @@ function renderCalendar() {
 
 async function loadSchedule() {
   const container = document.getElementById("schedule-container");
+  // Clear stale data before each reload
+  Object.keys(_schedByDay).forEach(k => delete _schedByDay[k]);
   try {
     const data = await fetchJSON(`${ESPN_BASE}/scoreboard?limit=300&dates=20260611-20260719`);
     const events = data.events || [];
@@ -1395,12 +1397,12 @@ function scheduleRefresh() {
   const hasLive = state.matches.some(m => m.live);
   window._refreshInterval = setInterval(async () => {
     await loadLiveData();
+    await loadSchedule();
     scheduleRefresh();
   }, hasLive ? 15_000 : 60_000);
 }
 
-loadLiveData().then(scheduleRefresh);
-loadSchedule();
+Promise.all([loadLiveData(), loadSchedule()]).then(scheduleRefresh);
 
 (function tickClock() {
   const el = document.getElementById("live-clock");
