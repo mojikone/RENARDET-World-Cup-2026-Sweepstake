@@ -740,7 +740,7 @@ function processStandings(data) {
     data?.children?.map(c => c.standings)?.filter(Boolean) ||
     data?.groups || [];
 
-  state.groups = rawGroups.map(g => {
+  state.groups = rawGroups.map((g, gi) => {
     const entries = g?.standings?.entries || g?.entries || [];
     const teams = entries.map(e => {
       const teamName = canonicalTeam(e.team?.displayName || e.team?.name || "");
@@ -764,7 +764,14 @@ function processStandings(data) {
     });
 
     return {
-      name: g.abbreviation || g.name || `Group ${state.groups.length + 1}`,
+      name: (() => {
+        const raw = (g.abbreviation || g.name || "").trim().toUpperCase();
+        // ESPN returns "OVERALL" pre-tournament — fall back to A, B, C…
+        if (!raw || raw === "OVERALL" || raw.length > 2) {
+          return String.fromCharCode(65 + gi); // A, B, C...
+        }
+        return raw;
+      })(),
       teams,
     };
   });
