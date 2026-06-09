@@ -134,6 +134,24 @@
       height: 1px;
       background: var(--border);
     }
+    .section-header-row {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      margin-bottom: 1rem;
+    }
+    .section-header-row .section-title {
+      margin-bottom: 0;
+      flex: 1;
+    }
+    #live-clock {
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: .5px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
 
     /* ── Leaderboard ── */
     #leaderboard-section {}
@@ -499,7 +517,10 @@
 
   <!-- Live / Recent Matches -->
   <section id="matches-section">
-    <div class="section-title" id="matches-title">⚽ Today's Matches</div>
+    <div class="section-header-row">
+      <div class="section-title" id="matches-title">⚽ Today's Matches</div>
+      <span id="live-clock"></span>
+    </div>
     <div id="matches-container"><div class="placeholder"><div class="emoji">⚽</div><p>Fetching match data…</p></div></div>
   </section>
 
@@ -1143,6 +1164,12 @@ function setTheme(theme) {
 renderAll();
 window._refreshInterval = setInterval(loadLiveData, 60_000);
 loadLiveData();
+
+(function tickClock() {
+  const el = document.getElementById("live-clock");
+  if (el) el.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  setTimeout(tickClock, 1000);
+})();
 </script>
 
 </body>
