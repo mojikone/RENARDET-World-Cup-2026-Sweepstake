@@ -528,21 +528,28 @@
       position: absolute;
       top: 1rem;
       right: 1rem;
-      background: rgba(255,255,255,.1);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 999px;
-      padding: .4rem .9rem;
+      background: none;
+      border: none;
+      padding: .4rem;
       cursor: pointer;
-      font-size: .85rem;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-      transition: background .2s;
+      color: rgba(255,255,255,.65);
+      line-height: 1;
       z-index: 10;
+      transition: color .2s;
     }
-    .theme-toggle:hover { background: rgba(255,255,255,.2); }
-    [data-theme="light"] .theme-toggle { background: rgba(0,0,0,.1); border-color: rgba(0,0,0,.15); color: #fff; }
+    .theme-toggle:hover { color: #fff; }
+    [data-theme="light"] .theme-toggle { color: rgba(255,255,255,.6); }
+    [data-theme="light"] .theme-toggle:hover { color: #fff; }
+    .theme-icon {
+      display: inline-block;
+      width: .9rem;
+      height: .9rem;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      background: linear-gradient(to right, currentColor 50%, transparent 50%);
+      vertical-align: middle;
+    }
+    [data-theme="light"] .theme-icon { background: linear-gradient(to left, currentColor 50%, transparent 50%); }
 
     /* ── Collapsible sections ── */
     .section-title.collapsible { cursor: pointer; user-select: none; }
@@ -565,7 +572,7 @@
 <header>
   <h1>Renardet <span>World Cup 2026</span> Sweepstake</h1>
   <p>FIFA World Cup · USA, Canada & Mexico · June 11 – July 19, 2026</p>
-  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()"><span class="theme-icon"></span></button>
   <div class="prize-banner">
     <div class="prize-pill gold">🥇 Winner — 75 OMR</div>
     <div class="prize-pill silver">🥈 Runner-up — 30 OMR</div>
@@ -1138,7 +1145,7 @@ function renderLeaderboard() {
 
     const prizeHtml = p.prize > 0
       ? `<span class="lb-prize prize-won">${p.prize} OMR</span>`
-      : `<span class="lb-prize prize-none">—</span>`;
+      : ``;
 
     const aliveHtml = hasResults
       ? `<span class="lb-alive"><span>${p.alive}</span> alive · ${p.dropped} out</span>`
@@ -1366,8 +1373,7 @@ function toggleTheme() {
 }
 function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme === "light" ? "light" : "");
-  const btn = document.getElementById("theme-toggle");
-  btn.textContent = theme === "light" ? "🌙" : "☀️";
+  // icon is CSS-only (.theme-icon), no textContent update needed
   localStorage.setItem("theme", theme);
 }
 // Apply saved or system preference on load
