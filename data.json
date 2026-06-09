@@ -1,0 +1,64 @@
+{
+  "participants": [
+    {
+      "name": "Prakash",
+      "teams": ["France", "USA", "Tunisia", "New Zealand"]
+    },
+    {
+      "name": "Mangesh",
+      "teams": ["Spain", "Turkiye", "Paraguay", "South Africa"]
+    },
+    {
+      "name": "John",
+      "teams": ["Argentina", "Switzerland", "Panama", "Uzbekistan"]
+    },
+    {
+      "name": "Nasser",
+      "teams": ["England", "Austria", "Sweden", "Jordan"]
+    },
+    {
+      "name": "Giles",
+      "teams": ["Portugal", "South Korea", "DR Congo", "Haiti"]
+    },
+    {
+      "name": "Lorenzo",
+      "teams": ["Brazil", "Australia", "Egypt", "Qatar"]
+    },
+    {
+      "name": "Barry",
+      "teams": ["Netherlands", "Ecuador", "Algeria", "Curacao"]
+    },
+    {
+      "name": "Dave",
+      "teams": ["Morocco", "Uruguay", "Czechia", "Bosnia and Herzegovina"]
+    },
+    {
+      "name": "Kumara",
+      "teams": ["Belgium", "Mexico", "Scotland", "Iraq"]
+    },
+    {
+      "name": "Darko",
+      "teams": ["Germany", "Senegal", "Ivory Coast", "Cape Verde"]
+    },
+    {
+      "name": "Mojtaba",
+      "teams": ["Croatia", "Japan", "Canada", "Ghana"]
+    },
+    {
+      "name": "Stefan",
+      "teams": ["Colombia", "Iran", "Norway", "Saudi Arabia"]
+    }
+  ],
+  "prizes": {
+    "winner": 75,
+    "runnerUp": 30,
+    "third": 15,
+    "entryFee": 10
+  },
+  "results": {
+    "winner": null,
+    "runnerUp": null,
+    "third": null,
+    "eliminated": []
+  }
+}
