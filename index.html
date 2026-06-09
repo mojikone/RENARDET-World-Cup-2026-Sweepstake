@@ -981,18 +981,23 @@ function renderMatches() {
   const container = document.getElementById("matches-container");
   const titleEl   = document.getElementById("matches-title");
 
+  // Hard gate: show nothing until tournament day
+  const now = new Date();
+  const tournamentStart = new Date("2026-06-11T00:00:00");
+  if (now < tournamentStart) {
+    const days = Math.ceil((tournamentStart - now) / 86_400_000);
+    titleEl.textContent = "⚽ Today's Matches";
+    container.innerHTML = `
+      <div class="placeholder">
+        <div class="emoji">⏳</div>
+        <p>Tournament kicks off <strong>Thursday June 11, 2026</strong>.<br>
+        Match data will appear here on the day — <strong>${days} day${days !== 1 ? "s" : ""} to go!</strong></p>
+      </div>`;
+    return;
+  }
+
   if (!state.matches.length) {
-    const now = new Date();
-    const kickoff = new Date("2026-06-11T20:00:00Z");
-    if (now < kickoff) {
-      container.innerHTML = `
-        <div class="placeholder">
-          <div class="emoji">⏳</div>
-          <p>The tournament kicks off on <strong>June 11, 2026</strong>.<br>Match data will appear here once it starts!</p>
-        </div>`;
-    } else {
-      container.innerHTML = `<div class="placeholder"><div class="emoji">⚽</div><p>No matches scheduled today.</p></div>`;
-    }
+    container.innerHTML = `<div class="placeholder"><div class="emoji">⚽</div><p>No matches scheduled today.</p></div>`;
     return;
   }
 
