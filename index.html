@@ -322,7 +322,31 @@
       background: var(--blue); color: #fff; cursor: pointer;
       transition: transform .1s, opacity .1s;
     }
-    .cal-cell.has-matches:hover { transform: scale(1.12); opacity: .9; }
+    .cal-cell.has-matches:hover { transform: scale(1.12); opacity: .9; z-index: 5; }
+
+    /* ── Day tooltip ── */
+    .day-tip {
+      position: fixed;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .5rem .7rem;
+      font-size: .75rem;
+      min-width: 160px;
+      max-width: 220px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .15s, transform .15s;
+    }
+    .day-tip.visible { opacity: 1; transform: translateY(0); }
+    .day-tip-date { font-weight: 700; font-size: .7rem; color: var(--muted); margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .04em; }
+    .day-tip-row { display: flex; gap: .4rem; align-items: baseline; padding: .18rem 0; border-top: 1px solid var(--border); }
+    .day-tip-row:first-of-type { border-top: none; }
+    .day-tip-time { color: var(--muted); font-size: .68rem; flex-shrink: 0; width: 3rem; }
+    .day-tip-match { flex: 1; line-height: 1.3; }
     .cal-cell.today { outline: 2px solid var(--gold); outline-offset: -2px; }
     .cal-cell.has-matches.today { background: var(--gold); color: #000; }
     .cal-dot { font-size: .55rem; margin-top: 1px; opacity: .8; }
@@ -660,6 +684,7 @@
   </section>
 
   <!-- Schedule Modal -->
+  <div class="day-tip" id="day-tip"></div>
   <div class="sched-modal-overlay" id="sched-modal-overlay" onclick="if(event.target===this)closeDayModal()">
     <div class="sched-modal">
       <div class="sched-modal-header">
@@ -871,6 +896,32 @@ function openDayModal(dateKey) {
   document.getElementById("sched-modal-overlay").classList.add("open");
 }
 
+function showDayTip(e, dateKey) {
+  const tip = document.getElementById("day-tip");
+  const matches = _schedByDay[dateKey] || [];
+  const d = new Date(dateKey + "T00:00:00");
+  const label = d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
+  tip.innerHTML = `<div class="day-tip-date">${label}</div>` +
+    matches.map(m => `<div class="day-tip-row">
+      <span class="day-tip-time">${m.completed ? "FT" : m.time}</span>
+      <span class="day-tip-match">${m.home} <span style="opacity:.5;font-size:.65rem">vs</span> ${m.away}${m.completed ? ` <span style="color:var(--green);font-weight:700">${m.homeScore}–${m.awayScore}</span>` : ""}</span>
+    </div>`).join("");
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let top = rect.bottom + 6, left = rect.left + rect.width / 2 - 80;
+  if (left + 220 > vw) left = vw - 228;
+  if (left < 4) left = 4;
+  if (top + tip.offsetHeight > vh) top = rect.top - tip.offsetHeight - 6;
+  tip.style.top = top + "px";
+  tip.style.left = left + "px";
+  tip.classList.add("visible");
+}
+
+function hideDayTip() {
+  document.getElementById("day-tip").classList.remove("visible");
+}
+
 function closeDayModal() {
   document.getElementById("sched-modal-overlay").classList.remove("open");
 }
@@ -912,8 +963,9 @@ function renderCalendar() {
             isToday ? "today" : ""
           ].filter(Boolean).join(" ");
           const onclick = hasMatches ? `onclick="openDayModal('${key}')"` : "";
+          const hover = hasMatches ? `onmouseenter="showDayTip(event,'${key}')" onmouseleave="hideDayTip()"` : "";
           const dot = hasMatches ? `<span class="cal-dot">${_schedByDay[key].length}⚽</span>` : "";
-          return `<div class="${cls}" ${onclick}>${day}${dot}</div>`;
+          return `<div class="${cls}" ${onclick} ${hover}>${day}${dot}</div>`;
         }).join("")}
       </div>
     </div>`;
