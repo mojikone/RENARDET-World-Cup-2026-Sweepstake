@@ -531,6 +531,32 @@
     .placeholder .emoji { font-size: 3rem; margin-bottom: 1rem; }
     .placeholder p { font-size: .95rem; }
 
+    /* ── Active users indicator ── */
+    .active-users {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      color: rgba(255,255,255,.65);
+      font-size: .78rem;
+      line-height: 1;
+      z-index: 10;
+    }
+    .active-dot {
+      width: .45rem;
+      height: .45rem;
+      border-radius: 50%;
+      background: #10b981;
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .35; }
+    }
+
     /* ── Theme toggle ── */
     .theme-toggle {
       position: absolute;
@@ -578,6 +604,7 @@
 <body>
 
 <header>
+  <div class="active-users"><span class="active-dot"></span><span id="active-count">—</span></div>
   <h1>Renardet <span>World Cup 2026</span> Sweepstake</h1>
   <p>FIFA World Cup · USA, Canada & Mexico · June 11 – July 19, 2026</p>
   <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()"><span class="theme-icon"></span></button>
@@ -1411,6 +1438,36 @@ Promise.all([loadLiveData(), loadSchedule()]).then(scheduleRefresh);
   if (el) el.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   setTimeout(tickClock, 1000);
 })();
+</script>
+
+<!-- Firebase active users presence -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import { getDatabase, ref, onValue, onDisconnect, set, push, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyAY3pbgdybKh56As9aBr_4vdyXw6t1KRNQ",
+    authDomain: "ren-sweepstake.firebaseapp.com",
+    databaseURL: "https://ren-sweepstake-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "ren-sweepstake",
+    storageBucket: "ren-sweepstake.firebasestorage.app",
+    messagingSenderId: "861812526726",
+    appId: "1:861812526726:web:42cdb2dcf098b82c90cb07"
+  });
+
+  const db = getDatabase(app);
+  const sessionsRef = ref(db, "activeSessions");
+  const myRef = push(sessionsRef);
+
+  set(myRef, { t: serverTimestamp() });
+  onDisconnect(myRef).remove();
+
+  onValue(sessionsRef, snap => {
+    const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+    const el = document.getElementById("active-count");
+    if (el) el.textContent = count === 1 ? "1 online" : `${count} online`;
+  });
 </script>
 
 </body>
