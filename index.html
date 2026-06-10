@@ -330,10 +330,9 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: .5rem .7rem;
+      padding: .5rem .75rem;
       font-size: .75rem;
-      min-width: 160px;
-      max-width: 220px;
+      width: 240px;
       box-shadow: 0 8px 24px rgba(0,0,0,.4);
       pointer-events: none;
       z-index: 999;
@@ -342,11 +341,17 @@
       transition: opacity .15s, transform .15s;
     }
     .day-tip.visible { opacity: 1; transform: translateY(0); }
-    .day-tip-date { font-weight: 700; font-size: .7rem; color: var(--muted); margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .04em; }
-    .day-tip-row { display: flex; gap: .4rem; align-items: baseline; padding: .18rem 0; border-top: 1px solid var(--border); }
+    .day-tip.mobile-tip { pointer-events: auto; }
+    .day-tip-date { font-weight: 700; font-size: .7rem; color: var(--muted); margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .04em; display: flex; justify-content: space-between; align-items: center; }
+    .day-tip-close { font-size: 1rem; cursor: pointer; color: var(--muted); line-height: 1; }
+    .day-tip-row { display: flex; gap: .4rem; align-items: flex-start; padding: .3rem 0; border-top: 1px solid var(--border); }
     .day-tip-row:first-of-type { border-top: none; }
-    .day-tip-time { color: var(--muted); font-size: .68rem; flex-shrink: 0; width: 3rem; }
-    .day-tip-match { flex: 1; line-height: 1.3; }
+    .day-tip-time { color: var(--muted); font-size: .68rem; flex-shrink: 0; width: 2.8rem; padding-top: .1rem; }
+    .day-tip-teams { flex: 1; }
+    .day-tip-team { font-weight: 600; line-height: 1.2; }
+    .day-tip-owner { font-size: .65rem; color: var(--blue); line-height: 1.2; margin-bottom: .15rem; }
+    .day-tip-vs { font-size: .6rem; color: var(--muted); margin: .1rem 0; }
+    .day-tip-score { font-size: .72rem; font-weight: 700; color: var(--green); }
     .cal-cell.today { outline: 2px solid var(--gold); outline-offset: -2px; }
     .cal-cell.has-matches.today { background: var(--gold); color: #000; }
     .cal-dot { font-size: .55rem; margin-top: 1px; opacity: .8; }
@@ -896,30 +901,50 @@ function openDayModal(dateKey) {
   document.getElementById("sched-modal-overlay").classList.add("open");
 }
 
-function showDayTip(e, dateKey) {
+const _isTouchDevice = () => window.matchMedia("(hover: none)").matches;
+
+function showDayTip(e, dateKey, isMobile) {
   const tip = document.getElementById("day-tip");
   const matches = _schedByDay[dateKey] || [];
   const d = new Date(dateKey + "T00:00:00");
   const label = d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
-  tip.innerHTML = `<div class="day-tip-date">${label}</div>` +
-    matches.map(m => `<div class="day-tip-row">
-      <span class="day-tip-time">${m.completed ? "FT" : m.time}</span>
-      <span class="day-tip-match">${m.home}${TEAM_TO_PERSON[m.home] ? ` <span style="color:var(--blue);font-size:.63rem">${TEAM_TO_PERSON[m.home]}</span>` : ""} <span style="opacity:.5;font-size:.65rem">vs</span> ${m.away}${TEAM_TO_PERSON[m.away] ? ` <span style="color:var(--blue);font-size:.63rem">${TEAM_TO_PERSON[m.away]}</span>` : ""}${m.completed ? ` <span style="color:var(--green);font-weight:700">${m.homeScore}–${m.awayScore}</span>` : ""}</span>
-    </div>`).join("");
+
+  const closeBtn = isMobile ? `<span class="day-tip-close" onclick="hideDayTip()">×</span>` : "";
+  tip.innerHTML = `<div class="day-tip-date"><span>${label}</span>${closeBtn}</div>` +
+    matches.map(m => {
+      const ho = TEAM_TO_PERSON[m.home] || "";
+      const ao = TEAM_TO_PERSON[m.away] || "";
+      const score = m.completed ? `<div class="day-tip-score">${m.homeScore}–${m.awayScore}</div>` : "";
+      return `<div class="day-tip-row">
+        <span class="day-tip-time">${m.completed ? "FT" : m.time}</span>
+        <span class="day-tip-teams">
+          <div class="day-tip-team">${m.home}</div>${ho ? `<div class="day-tip-owner">${ho}</div>` : ""}
+          <div class="day-tip-vs">vs</div>
+          <div class="day-tip-team">${m.away}</div>${ao ? `<div class="day-tip-owner">${ao}</div>` : ""}
+          ${score}
+        </span>
+      </div>`;
+    }).join("");
+
+  tip.classList.toggle("mobile-tip", !!isMobile);
 
   const rect = e.currentTarget.getBoundingClientRect();
   const vw = window.innerWidth, vh = window.innerHeight;
-  let top = rect.bottom + 6, left = rect.left + rect.width / 2 - 80;
-  if (left + 220 > vw) left = vw - 228;
+  let left = rect.left + rect.width / 2 - 120;
+  if (left + 244 > vw) left = vw - 248;
   if (left < 4) left = 4;
-  if (top + tip.offsetHeight > vh) top = rect.top - tip.offsetHeight - 6;
-  tip.style.top = top + "px";
-  tip.style.left = left + "px";
+
+  // Position: below cell, flip up if no room
+  tip.style.top = "-9999px"; tip.style.left = left + "px";
   tip.classList.add("visible");
+  const tipH = tip.offsetHeight;
+  let top = rect.bottom + 6;
+  if (top + tipH > vh - 8) top = rect.top - tipH - 6;
+  tip.style.top = top + "px";
 }
 
 function hideDayTip() {
-  document.getElementById("day-tip").classList.remove("visible");
+  document.getElementById("day-tip").classList.remove("visible", "mobile-tip");
 }
 
 function closeDayModal() {
@@ -962,8 +987,8 @@ function renderCalendar() {
             hasMatches ? "has-matches" : "",
             isToday ? "today" : ""
           ].filter(Boolean).join(" ");
-          const onclick = hasMatches ? `onclick="openDayModal('${key}')"` : "";
-          const hover = hasMatches ? `onmouseenter="showDayTip(event,'${key}')" onmouseleave="hideDayTip()"` : "";
+          const onclick = hasMatches ? `onclick="_isTouchDevice()?showDayTip(event,'${key}',true):openDayModal('${key}')"` : "";
+          const hover = hasMatches ? `onmouseenter="if(!_isTouchDevice())showDayTip(event,'${key}')" onmouseleave="if(!_isTouchDevice())hideDayTip()"` : "";
           const dot = hasMatches ? `<span class="cal-dot">${_schedByDay[key].length}⚽</span>` : "";
           return `<div class="${cls}" ${onclick} ${hover}>${day}${dot}</div>`;
         }).join("")}
@@ -1455,6 +1480,12 @@ function renderAll() {
 function toggleSection(titleEl) {
   titleEl.closest("section").classList.toggle("section-collapsed");
 }
+
+document.addEventListener("click", e => {
+  const tip = document.getElementById("day-tip");
+  if (tip.classList.contains("mobile-tip") && !tip.contains(e.target) && !e.target.closest(".cal-cell"))
+    hideDayTip();
+});
 
 function toggleTheme() {
   const isLight = document.documentElement.getAttribute("data-theme") === "light";
