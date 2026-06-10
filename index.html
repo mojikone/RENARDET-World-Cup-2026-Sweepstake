@@ -347,10 +347,10 @@
     .day-tip-row { display: flex; gap: .4rem; align-items: center; padding: .35rem 0; border-top: 1px solid var(--border); }
     .day-tip-row:first-of-type { border-top: none; }
     .day-tip-time { color: var(--muted); font-size: .65rem; flex-shrink: 0; width: 2.6rem; }
-    .day-tip-matchup { flex: 1; display: flex; align-items: center; gap: .3rem; }
-    .day-tip-side { flex: 1; }
+    .day-tip-matchup { flex: 1; min-width: 0; display: flex; align-items: center; gap: .3rem; overflow: hidden; }
+    .day-tip-side { flex: 1; min-width: 0; overflow: hidden; }
     .day-tip-side.away { text-align: right; }
-    .day-tip-team { font-weight: 600; font-size: .75rem; line-height: 1.2; }
+    .day-tip-team { font-weight: 600; font-size: .75rem; line-height: 1.2; word-break: break-word; }
     .day-tip-owner { font-size: .62rem; color: var(--blue); line-height: 1.2; }
     .day-tip-vs { font-size: .6rem; color: var(--muted); flex-shrink: 0; }
     .day-tip-score { font-size: .7rem; font-weight: 700; color: var(--green); flex-shrink: 0; text-align: center; }
