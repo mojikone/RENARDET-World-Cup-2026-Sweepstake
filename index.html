@@ -904,7 +904,7 @@ function showDayTip(e, dateKey) {
   tip.innerHTML = `<div class="day-tip-date">${label}</div>` +
     matches.map(m => `<div class="day-tip-row">
       <span class="day-tip-time">${m.completed ? "FT" : m.time}</span>
-      <span class="day-tip-match">${m.home} <span style="opacity:.5;font-size:.65rem">vs</span> ${m.away}${m.completed ? ` <span style="color:var(--green);font-weight:700">${m.homeScore}–${m.awayScore}</span>` : ""}</span>
+      <span class="day-tip-match">${m.home}${TEAM_TO_PERSON[m.home] ? ` <span style="color:var(--blue);font-size:.63rem">${TEAM_TO_PERSON[m.home]}</span>` : ""} <span style="opacity:.5;font-size:.65rem">vs</span> ${m.away}${TEAM_TO_PERSON[m.away] ? ` <span style="color:var(--blue);font-size:.63rem">${TEAM_TO_PERSON[m.away]}</span>` : ""}${m.completed ? ` <span style="color:var(--green);font-weight:700">${m.homeScore}–${m.awayScore}</span>` : ""}</span>
     </div>`).join("");
 
   const rect = e.currentTarget.getBoundingClientRect();
