@@ -344,15 +344,16 @@
     .day-tip.mobile-tip { pointer-events: auto; }
     .day-tip-date { font-weight: 700; font-size: .7rem; color: var(--muted); margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .04em; display: flex; justify-content: space-between; align-items: center; }
     .day-tip-close { font-size: 1rem; cursor: pointer; color: var(--muted); line-height: 1; }
-    .day-tip-row { display: flex; gap: .4rem; align-items: baseline; padding: .3rem 0; border-top: 1px solid var(--border); }
+    .day-tip-row { display: flex; gap: .4rem; align-items: center; padding: .35rem 0; border-top: 1px solid var(--border); }
     .day-tip-row:first-of-type { border-top: none; }
-    .day-tip-time { color: var(--muted); font-size: .68rem; flex-shrink: 0; width: 2.8rem; padding-top: .15rem; }
-    .day-tip-matchup { flex: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .3rem; line-height: 1.4; }
-    .day-tip-side { display: flex; align-items: baseline; gap: .2rem; }
-    .day-tip-team { font-weight: 600; font-size: .75rem; }
-    .day-tip-owner { font-size: .63rem; color: var(--blue); }
-    .day-tip-vs { font-size: .63rem; color: var(--muted); flex-shrink: 0; }
-    .day-tip-score { font-size: .72rem; font-weight: 700; color: var(--green); flex-shrink: 0; }
+    .day-tip-time { color: var(--muted); font-size: .65rem; flex-shrink: 0; width: 2.6rem; }
+    .day-tip-matchup { flex: 1; display: flex; align-items: center; gap: .3rem; }
+    .day-tip-side { flex: 1; }
+    .day-tip-side.away { text-align: right; }
+    .day-tip-team { font-weight: 600; font-size: .75rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .day-tip-owner { font-size: .62rem; color: var(--blue); line-height: 1.2; }
+    .day-tip-vs { font-size: .6rem; color: var(--muted); flex-shrink: 0; }
+    .day-tip-score { font-size: .7rem; font-weight: 700; color: var(--green); flex-shrink: 0; text-align: center; }
     .cal-cell.today { outline: 2px solid var(--gold); outline-offset: -2px; }
     .cal-cell.has-matches.today { background: var(--gold); color: #000; }
     .cal-dot { font-size: .55rem; margin-top: 1px; opacity: .8; }
@@ -914,16 +915,19 @@ function showDayTip(e, dateKey, isMobile) {
   const closeBtn = isMobile ? `<span class="day-tip-close" onclick="hideDayTip()">×</span>` : "";
   tip.innerHTML = `<div class="day-tip-date"><span>${label}</span>${closeBtn}</div>` +
     matches.map(m => {
-      const ho = TEAM_TO_PERSON[m.home] ? `<span class="day-tip-owner">${TEAM_TO_PERSON[m.home]}</span>` : "";
-      const ao = TEAM_TO_PERSON[m.away] ? `<span class="day-tip-owner">${TEAM_TO_PERSON[m.away]}</span>` : "";
-      const score = m.completed ? `<span class="day-tip-score">${m.homeScore}–${m.awayScore}</span>` : "";
+      const score = `<span class="day-tip-score">${m.homeScore}–${m.awayScore}</span>`;
       return `<div class="day-tip-row">
         <span class="day-tip-time">${m.completed ? "FT" : m.time}</span>
         <span class="day-tip-matchup">
-          <span class="day-tip-side"><span class="day-tip-team">${m.home}</span>${ho}</span>
-          <span class="day-tip-vs">vs</span>
-          <span class="day-tip-side"><span class="day-tip-team">${m.away}</span>${ao}</span>
-          ${score}
+          <span class="day-tip-side">
+            <div class="day-tip-team">${m.home}</div>
+            ${TEAM_TO_PERSON[m.home] ? `<div class="day-tip-owner">${TEAM_TO_PERSON[m.home]}</div>` : ""}
+          </span>
+          <span class="day-tip-vs">${m.completed ? score : "vs"}</span>
+          <span class="day-tip-side away">
+            <div class="day-tip-team">${m.away}</div>
+            ${TEAM_TO_PERSON[m.away] ? `<div class="day-tip-owner">${TEAM_TO_PERSON[m.away]}</div>` : ""}
+          </span>
         </span>
       </div>`;
     }).join("");
