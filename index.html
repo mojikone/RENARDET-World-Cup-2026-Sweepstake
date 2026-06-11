@@ -359,6 +359,7 @@
     .day-tip-owner { font-size: .62rem; color: var(--blue); line-height: 1.2; }
     .day-tip-vs { font-size: .6rem; color: var(--muted); flex-shrink: 0; }
     .day-tip-score { font-size: .7rem; font-weight: 700; color: var(--green); flex-shrink: 0; text-align: center; }
+    .day-tip-row.tip-live .day-tip-time { color: var(--green); font-weight: 700; }
     .cal-cell.today { outline: 2px solid var(--gold); outline-offset: -2px; }
     .cal-cell.has-matches.today { background: var(--gold); color: #000; }
     .cal-dot { font-size: .55rem; margin-top: 1px; opacity: .8; }
@@ -924,20 +925,34 @@ function showDayTip(e, dateKey, isMobile) {
   const label = d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
 
   const closeBtn = isMobile ? `<span class="day-tip-close" onclick="hideDayTip()">×</span>` : "";
+  const liveMap = new Map(
+    state.matches.filter(m => m.live).map(m => [`${m.homeTeam}|${m.awayTeam}`, m])
+  );
   tip.innerHTML = `<div class="day-tip-date"><span>${label}</span>${closeBtn}</div>` +
     matches.map(m => {
-      const score = `<span class="day-tip-score">${m.homeScore}–${m.awayScore}</span>`;
-      return `<div class="day-tip-row">
-        <span class="day-tip-time">${m.completed ? "FT" : m.time}</span>
+      const live = liveMap.get(`${m.home}|${m.away}`);
+      const hs = live ? live.homeScore : m.homeScore;
+      const as = live ? live.awayScore : m.awayScore;
+      const showScore = live || m.completed;
+      const rl = (m.roundValue || 0) >= 2 ? ROUND_LABEL[m.roundValue] : "";
+      const timeLabel = live ? "LIVE" : m.completed ? "FT" : m.time;
+      const timeSlot = rl
+        ? `<div style="font-size:.55rem;opacity:.6;line-height:1.2">${rl}</div><div>${timeLabel}</div>`
+        : timeLabel;
+      const score = `<span class="day-tip-score">${hs}–${as}</span>`;
+      const homeOwner = TEAM_TO_PERSON[m.home];
+      const awayOwner = TEAM_TO_PERSON[m.away];
+      return `<div class="day-tip-row${live ? " tip-live" : ""}">
+        <span class="day-tip-time">${timeSlot}</span>
         <span class="day-tip-matchup">
           <span class="day-tip-side">
             <div class="day-tip-team">${m.home}</div>
-            ${TEAM_TO_PERSON[m.home] ? `<div class="day-tip-owner">${TEAM_TO_PERSON[m.home]}</div>` : ""}
+            ${homeOwner ? `<div class="day-tip-owner" style="color:${PERSON_COLORS[homeOwner]}">${homeOwner}</div>` : ""}
           </span>
-          <span class="day-tip-vs">${m.completed ? score : "vs"}</span>
+          <span class="day-tip-vs">${showScore ? score : "vs"}</span>
           <span class="day-tip-side away">
             <div class="day-tip-team">${m.away}</div>
-            ${TEAM_TO_PERSON[m.away] ? `<div class="day-tip-owner">${TEAM_TO_PERSON[m.away]}</div>` : ""}
+            ${awayOwner ? `<div class="day-tip-owner" style="color:${PERSON_COLORS[awayOwner]}">${awayOwner}</div>` : ""}
           </span>
         </span>
       </div>`;
@@ -1042,6 +1057,7 @@ async function loadSchedule() {
         homeScore: home?.score ?? "",
         awayScore: away?.score ?? "",
         completed: status?.completed || false,
+        roundValue: roundValue(getRoundText(ev, comp)),
       });
     }
     renderCalendar();
