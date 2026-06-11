@@ -947,12 +947,12 @@ function showDayTip(e, dateKey, isMobile) {
         <span class="day-tip-matchup">
           <span class="day-tip-side">
             <div class="day-tip-team">${m.home}</div>
-            ${homeOwner ? `<div class="day-tip-owner" style="color:${PERSON_COLORS[homeOwner]}">${homeOwner}</div>` : ""}
+            ${homeOwner ? `<div class="day-tip-owner">${homeOwner}</div>` : ""}
           </span>
           <span class="day-tip-vs">${showScore ? score : "vs"}</span>
           <span class="day-tip-side away">
             <div class="day-tip-team">${m.away}</div>
-            ${awayOwner ? `<div class="day-tip-owner" style="color:${PERSON_COLORS[awayOwner]}">${awayOwner}</div>` : ""}
+            ${awayOwner ? `<div class="day-tip-owner">${awayOwner}</div>` : ""}
           </span>
         </span>
       </div>`;
