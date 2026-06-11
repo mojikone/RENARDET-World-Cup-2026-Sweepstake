@@ -212,6 +212,11 @@
     .team-tag.second  { border-color: var(--silver); color: var(--silver); }
     .team-tag.third   { border-color: #cd7f32; color: #cd7f32; }
     .team-tag.eliminated { border-color: var(--border); color: var(--muted); text-decoration: line-through; opacity: .6; }
+    .team-tag.playing { animation: tag-playing 1.8s ease-in-out infinite; }
+    @keyframes tag-playing {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.4); }
+      50%      { box-shadow: 0 0 6px 2px rgba(16,185,129,.2); }
+    }
     .lb-prize {
       font-weight: 800;
       font-size: 1.1rem;
@@ -427,6 +432,12 @@
     .g-status.best-third { background: var(--gold); }
     .g-status.alive { background: var(--muted); }
     .g-status.out { background: transparent; border: 1px solid var(--border); }
+    .group-team-row.playing { background: rgba(16,185,129,.07); }
+    .group-team-row.playing .g-status { background: var(--green) !important; border: none !important; animation: dot-playing 1.8s ease-in-out infinite; }
+    @keyframes dot-playing {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .35; }
+    }
     .g-team { font-weight: 600; flex: 1; }
     .g-owner { font-size: .68rem; color: var(--blue); }
     .team-owner-badge {
@@ -1232,8 +1243,15 @@ function renderPodium() {
     </div>`;
 }
 
+function getLiveTeamSet() {
+  return new Set(
+    state.matches.filter(m => m.live).flatMap(m => [m.homeTeam, m.awayTeam])
+  );
+}
+
 function renderLeaderboard() {
   const hasResults = state.winner || state.runnerUp || state.third || state.eliminated.length > 0;
+  const liveTeams = getLiveTeamSet();
 
   const ranked = [...PARTICIPANTS]
     .map(p => {
@@ -1259,7 +1277,8 @@ function renderLeaderboard() {
       const s = teamStatus(t);
       const rl = teamRoundLabel(t);
       const suffix = rl ? ` <span style="opacity:.6;font-size:.65rem">${rl}</span>` : "";
-      return `<span class="team-tag ${s}">${t}${suffix}</span>`;
+      const playingClass = liveTeams.has(t) ? " playing" : "";
+      return `<span class="team-tag ${s}${playingClass}">${t}${suffix}</span>`;
     }).join("");
 
     const prizeHtml = p.prize > 0
@@ -1409,10 +1428,12 @@ function renderTournament() {
   // ── Groups ──
   if (hasGroups) {
     titleEl.innerHTML = "<span class='section-chevron'></span>Group Stage";
+    const liveTeams = getLiveTeamSet();
     html += `<div class="groups-grid">` + state.groups.map(g => {
       const rows = g.teams.map(t => {
         const dotClass = t.status === "qualified" ? "qualified" : t.status === "best-third" ? "best-third" : t.status === "out" ? "out" : "alive";
-        const rowClass = t.status === "out" ? "out" : "";
+        const isPlaying = liveTeams.has(t.name);
+        const rowClass = [t.status === "out" ? "out" : "", isPlaying ? "playing" : ""].filter(Boolean).join(" ");
         return `<div class="group-team-row ${rowClass}">
           <span class="g-status ${dotClass}"></span>
           <span class="g-team">${t.name}</span>
