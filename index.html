@@ -1195,11 +1195,13 @@ function processStandings(data) {
     }).sort((a, b) => b.pts - a.pts || (b.gf - b.ga) - (a.gf - a.ga));
 
     const gamesPlayed = teams.reduce((s, t) => s + t.p, 0);
+    const groupComplete = teams.every(t => t.p >= 3);
     teams.forEach((t, i) => {
       t.status = gamesPlayed === 0 ? "alive"
                : i < 2            ? "qualified"
                : i === 2          ? "best-third"
-               :                    "out";
+               : groupComplete    ? "out"
+               :                    "alive";
     });
 
     // ESPN already returns "Group A", "Group B" etc — extract the letter
